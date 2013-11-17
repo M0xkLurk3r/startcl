@@ -88,12 +88,12 @@ STARTCL 是一个自由软件，您可以自由修改代码并再发布，但您
 关于如何编译本软件，唔，首先参阅github如何把源码下载到你的硬盘上的方法下载我的源码。
 下载完毕后应该有这么几个文件：
 
->Root:
->  -main.cpp           // 主程序文件。
->   -main.res           // 资源文件，编成以后会在EXE里填写本软件的version信息啦。
->  -Makefile.bat       // Makefile脚本。
->  -COPYING            // 版权声明。
->  -README.md          // 就是您现在看到的这个了咩~
+>       Root:
+  -main.cpp           // 主程序文件。
+  -main.res           // 资源文件，编成以后会在EXE里填写本软件的version信息啦。
+  -Makefile.bat       // Makefile脚本。
+  -COPYING            // 版权声明。
+  -README.md          // 就是您现在看到的这个了咩~
 
 解压完毕后，请使用Visual Studio命令提示运行目录下的Makefile.bat。关于如何使用Visual Studio命令提示，请参阅微软的MSDN文档：http://msdn.microsoft.com/zh-cn/library/ms229859.aspx
 
