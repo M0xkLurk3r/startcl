@@ -1,0 +1,45 @@
+//  This file is part of STARTCL.
+
+//  STARTCL is free software: you can redistribute it and/or modify
+//  it under the terms of the GNU General Public License as published by
+//  the Free Software Foundation, either version 3 of the License, or
+//  (at your option) any later version.
+
+//  STARTCL is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//  GNU General Public License for more details.
+
+//  You should have received a copy of the GNU General Public License
+//  along with STARTCL.  If not, see <http://www.gnu.org/licenses/>.
+
+#include <windows.h> // include for version info constants
+
+//
+// TO CHANGE VERSION INFORMATION, EDIT PROJECT OPTIONS...
+//
+1 VERSIONINFO
+FILEVERSION 1,0,0,0
+PRODUCTVERSION 1,0,0,0
+FILETYPE VFT_APP
+{
+  BLOCK "StringFileInfo"
+  {
+    BLOCK "040904E4"
+    {
+      VALUE "CompanyName", "1eekai"
+      VALUE "FileVersion", "1.0.0.0"
+      VALUE "FileDescription", "This program was designed to use CL.exe in the DEV-C++ instead of MinGW-GCC."
+      VALUE "InternalName", "STARTCL_RELEASE.EXE"
+      VALUE "LegalCopyright", "1eekai"
+      VALUE "LegalTrademarks", "1eekai"
+      VALUE "OriginalFilename", "STARTCL_RELEASE.EXE"
+      VALUE "ProductName", "CL.exe-Dev-C++ Connector"
+      VALUE "ProductVersion", "0.0.1beta"
+    }
+  }
+  BLOCK "VarFileInfo"
+  {
+    VALUE "Translation", 0x0409, 1252
+  }
+}
