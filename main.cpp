@@ -21,6 +21,10 @@
 #include <winerror.h>
 #include <tchar.h>
 
+#ifdef _DEBUG
+#define new DEBUG_NEW   //   检测内存泄露的情况。本人有强迫症，请理解。= =
+#endif
+
 #pragma comment(lib,"Advapi32.lib")
 
 using namespace std;
@@ -90,8 +94,8 @@ bool registeryRead(char* MJKey, char* pathToReg_raw, char* keyWords_raw, unsigne
 }
 
 bool autofindEnvAndAssign(char* keyEnvWords, char* vsVersion, char* cpuArch){
-	unsigned char* result=new unsigned char[1000];     //  Automatically find the environment in the registery.
-	unsigned char* result1=new unsigned char[1000];
+	unsigned char* result=new unsigned char[1000];     //  自动从注册表搜寻环境变量。
+	unsigned char* result1=new unsigned char[1000];	   //  这一段代码感觉写的算最烂的呜呜呜~~~
 	unsigned char* result2=new unsigned char[1000];
 	unsigned char* dotnetname=new unsigned char[20];
 	unsigned char* dotnetver=new unsigned char[20];
@@ -101,7 +105,7 @@ bool autofindEnvAndAssign(char* keyEnvWords, char* vsVersion, char* cpuArch){
 		if (isWow64()){
 			if (registeryRead("HKLM","SOFTWARE\\Wow6432Node\\Microsoft\\VisualStudio\\SxS\\VS7",vsVersion,result)==true && registeryRead("HKLM","SOFTWARE\\Wow6432Node\\Microsoft\\VisualStudio\\SxS\\VS7",vsVersion,result1)==true){
 				strcpy((char *)result,"Common7\\Tools");
-				putenv((char *)result1);
+				putenv((char *)result1); // VS100COMNTOOLS 比 VSINSTALLDIR 多两个目录名，最后直接strcat就可以啦~
 				putenv((char *)result);
 				delete [] result;
 				delete [] result1;
@@ -110,7 +114,7 @@ bool autofindEnvAndAssign(char* keyEnvWords, char* vsVersion, char* cpuArch){
 					if (registeryRead("HKCU","SOFTWARE\\Wow6432Node\\Microsoft\\VisualStudio\\SxS\\VS7",vsVersion,result)==true && registeryRead("HKCU","SOFTWARE\\Wow6432Node\\Microsoft\\VisualStudio\\SxS\\VS7",vsVersion,result1)==true){
 						strcpy((char *)result,"Common7\\Tools");
 						putenv((char *)result1);
-						putenv((char *)result);
+						putenv((char *)result); //  同理
 						delete [] result;
 						delete [] result1;
 						return true;
@@ -149,7 +153,7 @@ bool autofindEnvAndAssign(char* keyEnvWords, char* vsVersion, char* cpuArch){
 				putenv((char *)result);
 				delete [] result;
 				delete [] result1;
-				delete [] result2;
+				delete [] result2;   //  申请了好多动态内存。。但是这些都是必要的。
 				delete [] dotnetname;
 				delete [] dotnetver;
 				return true;
@@ -167,7 +171,7 @@ bool autofindEnvAndAssign(char* keyEnvWords, char* vsVersion, char* cpuArch){
 								strcat((char *)result,getenv("VCINSTALLDIR"));
 								strcat((char *)result,"\\PlatformSDK");
 								putenv((char *)result);
-								delete [] result;
+								delete [] result;    //   这一段纯属把vcvars??.bat批处理脚本的代码翻译过来的。如果找不到WinSDK的地址，可以这么做。但是个人经验一旦这么做，最后调用CL.exe编译的时候注定失败（众：那你干脆道这直接return false得了....）
 								delete [] result1;
 								delete [] result2;
 								delete [] dotnetname;
@@ -194,7 +198,7 @@ bool autofindEnvAndAssign(char* keyEnvWords, char* vsVersion, char* cpuArch){
 				putenv((char *)result);
 				delete [] result;
 				if (strcmp((char *)cpuArch,"x86")==0 || strcmp((char *)cpuArch,"x86_amd64")==0 || strcmp((char *)cpuArch,"x86_ia64")==0){
-				strcat((char *)dotnetname,"32");
+				strcat((char *)dotnetname,"32");   // 这一段纯属拼字符串。看着理解吧。
 				strcat((char *)dotnetver,"32");
 				}else{
 					strcat((char *)dotnetname,"64");
@@ -265,14 +269,14 @@ bool autofindEnvAndAssign(char* keyEnvWords, char* vsVersion, char* cpuArch){
 				}
 		}
 	}
-	cout<<keyEnvWords<<" 未知错误。"<<endl;
+	cout<<keyEnvWords<<" 未知错误。"<<endl;   //    这是无奈之举，为了防止程序dump core。
 	return false;
 }
 				
 		
 		
-bool findEnvAndAssign(char** arg, char* keyEnvWords){   // Give the key words and the main functions' argv, this function will search the 
-	char *tmpstr=new char[1000];						// key words in the arguments and accept it.
+bool findEnvAndAssign(char** arg, char* keyEnvWords){   // 从二维数组里查找字符匹配的字符串
+	char *tmpstr=new char[1000];			// 并把二维数组后一个字符串作为环境变量的值注册到系统。
 	char shorttmp[20]="\0";
 	char shorttmpstr[20]="\0";
 	int counter,counter_matrix=0;
@@ -281,7 +285,7 @@ bool findEnvAndAssign(char** arg, char* keyEnvWords){   // Give the key words an
 	strcat(tmpstr,"=");
 	strcpy(shorttmp,tmpstr);
 	while (1==1){
-		if (arg[counter_matrix]!=0 && arg[counter_matrix]!=0){	// Search the key words. the next arguments was the arg_value, just assign it.
+		if (arg[counter_matrix]!=0 && arg[counter_matrix]!=0){	// 搜索二维数组。前一个是环境变量名，后一个是变量值。
 		if (strcmp(arg[counter_matrix],keyEnvWords)==0){
 			strcat(tmpstr,arg[counter_matrix+1]);
 		}else{
@@ -304,7 +308,7 @@ bool findEnvAndAssign(char** arg, char* keyEnvWords){   // Give the key words an
 	}
 }
 
-int findStrInTheMatrix(char **matrix, char *keywords){  // find the current str in the double array(matrix) by first two character. Use this to search the strings in the argv
+int findStrInTheMatrix(char **matrix, char *keywords){  // 在字符二维数组中查找头两个字符匹配的字符串，并返回该字符串的脚标。
 	int num=0;
 	while (matrix[num]!=0){
 		num++;
@@ -327,7 +331,7 @@ bool fileCouldbeused(char* filename){
 	}
 }
 
-int findDotInThePath(char* filepath){
+int findDotInThePath(char* filepath){     //   在路径命中查找“.”的位置（主要是为了后面判断文件的后缀名
 	int strpin,finalresult;
 	int value=0;
 	for (strpin=0;strpin<strlen(filepath)+1;strpin++){
@@ -350,7 +354,7 @@ void showhelp(char* argv0){
 	cout<<"\tWindowsSdkDir: [PATH],设置指向你的Windows SDK安装地址。"<<endl;
 	cout<<"\tFrameworkDir: [PATH],设置指向你的.NET Framework安装地址。"<<endl;
 	cout<<"\n反馈bug到lkphantom1995@gmail.com"<<endl;
-	exit(0);    // Print the help message and execute the exit(). In someway execute showhelp() was equal to quit the program.
+	exit(0);    // 显示帮助并执行exit(0)，一定程度上执行showhelp()即表示程序终止。
 }
 
 void version(void){
@@ -358,7 +362,7 @@ void version(void){
 	cout<<"STARTCL 是一个自由软件，您可以自由修改代码并再发布，但您在做这些的同时必须遵守GNU GPLv3协议的各项条款。"<<endl;
 	cout<<"STARTCL 作为自由软件没有担保。更多版权信息，请参阅COPYING。"<<endl;
 	cout<<"\n\nbuilt: i386-VS2010"<<endl;
-	exit(0);
+	exit(0);  //  显示版权信息并执行exit(0)，一定程度上执行version()即表示程序终止。
 }
 
 int main(int argc, char* argv[]){
@@ -377,27 +381,27 @@ int main(int argc, char* argv[]){
 	bool isSdkDefined=true;
 	char vcExec[255]="\0";
 	char ldExec[255]="\0";
-	int counter=1;      //  To verify the counter
+	int counter=1;      //  初始化计数器。
 	cout<<"CL-to-Dev-C++ 连接器 v0.01beta      by 1eekai"<<endl;
 	cout<<"Copyright 2013 1eekai"<<endl;
 	cout<<"查看 ReadME.MD 来获取帮助。\n"<<endl; 
 	if (argv[1]==0){
 		cout<<argv[0]<<": "<<"您必须设置一个合法的C/C++源码。编译中止。"<<endl;
-		progra_exit(1);
+		progra_exit(1);    // 防止程序dump core。
 	}else{
 	if (strcmp(argv[1],"--version")==0){
 		version();
 		}
-	if (strcmp(argv[1],"--help")==0){    // Line 102~135 brings the program down when user did not specified the argv[1~5].
-		showhelp(argv[0]);				 // case of "argv[1~5]=NULL" will not even make the CL.exe not work well, it may make startcl dump core..........
+	if (strcmp(argv[1],"--help")==0){    
+		showhelp(argv[0]);			
 	}else{
 		if (findStrInTheMatrix(argv,"-o")==65535){
 			cout<<argv[0]<<": "<<"您必须定义一个合法的输出文件地址(您是不是忘了使用\"-o\"选项？:)"<<endl;
 			progra_exit(1);
 		}else{
 			outputf=&argv[findStrInTheMatrix(argv,"-o")+1][0];
-			strcpy(outputfile,"/OUT:");
-			strcpy(outputfile_cl,"/Fe");
+			strcpy(outputfile,"/OUT:");   // 为 Link.exe 指定输出目录（拼字符串）
+			strcpy(outputfile_cl,"/Fe");  // 为 cl.exe 指定输出目录（拼字符串）
 			strcat(outputfile,outputf);
 			strcat(outputfile_cl,outputf);
 		}
@@ -439,7 +443,7 @@ counter=1;
 	}
 		cout<<argv[0]<<": "<<"Setting runtime path for CL.exe."<<endl;
 		tmpchar=(char *)new char[65535];
-		tmpstr=(char *)new char[65535];  //Line 139~161 will set up the necessary environment of Visual Studio.
+		tmpstr=(char *)new char[65535];  
 		if (findEnvAndAssign(argv,"VERSION")==false){
 			cout<<argv[0]<<": VERSION项必须被定义。缺省使用10.0。"<<endl;
 			putenv("VERSION=10.0");
@@ -538,7 +542,7 @@ counter=1;
 		putenv(tmpstr);
 		clrchararray(tmpchar);
 		clrchararray(tmpstr); 
-		strcpy(tmpchar,"INCLUDE=");  // And the Include file path.
+		strcpy(tmpchar,"INCLUDE=");
 		if (getenv("VCINSTALLDIR")!=0){
 			strcat(tmpchar,getenv("VCINSTALLDIR"));
 			strcat(tmpchar,"INCLUDE;");
@@ -550,7 +554,7 @@ counter=1;
 			}
 		}
 		putenv(tmpchar);
-		strcpy(tmpchar,"PATH=");         // Set the PATH file with VSINSTALLDIR.
+		strcpy(tmpchar,"PATH=");
 		strcat(tmpchar,getenv("PATH"));
 		strcat(tmpchar,";");
 		if (getenv("VSINSTALLDIR")!=0){
@@ -570,7 +574,7 @@ counter=1;
 			strcat(tmpchar,";");
 		}
 	}
-		if (getenv("WindowsSdkDir")!=0){ 			// And the WindowsSdkDir.
+		if (getenv("WindowsSdkDir")!=0){ 
 			if (strcmp(readcpuarch,"x86")==0){
 			strcat(tmpchar,getenv("VSINSTALLDIR"));
 			strcat(tmpchar,"bin\\NETFX 4.0 Tools;");
@@ -591,12 +595,12 @@ counter=1;
 		}else{
 		}
 		if (getenv("VS100COMNTOOLS")!=0){
-				strcat(tmpchar,getenv("VS100COMNTOOLS")); // And the VS100COMNTOOLS.
+				strcat(tmpchar,getenv("VS100COMNTOOLS"));
 				tmpchar[strlen(tmpchar)-5]='\0';
 				strcat(tmpchar,"IDE");
 			}
 		putenv(tmpchar);
-		delete [] tmpstr;     // Free the heap memory.
+		delete [] tmpstr;
 		delete [] tmpchar;
 		if (inputFileisCpp==true){
 			cout<<argv[0]<<": 运行时环境设置完成，现在将调用CL.exe来编译您的代码。"<<endl;
@@ -605,15 +609,15 @@ counter=1;
 			cout<<argv[0]<<": 运行时环境设置完成，现在将调用Link.exe来连接您的二进制文件。"<<endl;
 			cout<<argv[0]<<": LINK.exe 命令行输出：\n\n"<<endl;
 		}
-		if (fileCouldbeused(vcExec)==false){     // Prevent from program crash.
+		if (fileCouldbeused(vcExec)==false){    //   防止程序 dump core。
 			cout<<argv[0]<<": "<<vcExec<<endl;
 			cout<<argv[0]<<": "<<"文件不存在或无法访问！"<<endl;
 			progra_exit(1);
 		}else{
 			if (inputFileisCpp==true){
-			execl(vcExec,"cl.exe",getenv("CPMode"),finalFile,outputfile_cl,NULL);
+			execl(vcExec,"cl.exe",getenv("CPMode"),finalFile,outputfile_cl,NULL);  //    执行cl.exe
 		}else{
-			execl(ldExec,"link.exe",finalFile,outputfile,NULL);
+			execl(ldExec,"link.exe",finalFile,outputfile,NULL); //    执行 link.exe
 		}
 		}
 		delete [] outputfile;
