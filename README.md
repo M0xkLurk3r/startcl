@@ -4,7 +4,7 @@ startcl
 A connector makes DEV-C++ complies software via CL.exe
 
 这个软件允许您在DEV-C++集成环境里编译CL.exe的软件。
-作者认为，在Windows下可以使用的C/C++编译器，迄今为止，最好的仍然是VS2010的CL.exe。但是DEV-C++没有对CL.exe的原生支持，而且在Tools->Compiler Options里面不能直接添加CL.exe作为编译器使用（DEV-C++仅支持调用gcc）。
+作者认为，在Windows下可以使用的C/C++编译器里，迄今为止，最棒的仍然是VS2010的CL.exe。但是DEV-C++缺少对CL.exe进行原生支持，且在Tools->Compiler Options里面不能直接添加CL.exe作为编译器使用（DEV-C++仅支持调用gcc）。
 为了解决这个问题，本人编写了STARTCL。
 此软件设计的初衷是为了能在DEV-C++里面使用CL.exe。当然，也可以在其他兼容的IDE里面使用本软件。
 
@@ -89,13 +89,19 @@ STARTCL 是一个自由软件，您可以自由修改代码并再发布，但您
 下载完毕后应该有这么几个文件：
 
 >       Root:
+
 >  -main.cpp           // 主程序文件。
+
 >  -main.res           // 资源文件，编成以后会在EXE里填写本软件的version信息啦。
+
 >  -Makefile.bat       // Makefile脚本。
+
 >  -COPYING            // 版权声明。
+
 >  -README.md          // 就是您现在看到的这个了咩~
 
-解压完毕后，请使用Visual Studio命令提示运行目录下的Makefile.bat。关于如何使用Visual Studio命令提示，请参阅微软的MSDN文档：http://msdn.microsoft.com/zh-cn/library/ms229859.aspx
+
+解压完毕后，请使用Visual Studio命令提示来运行目录下的Makefile.bat。关于如何使用Visual Studio命令提示，请参阅微软的MSDN文档：http://msdn.microsoft.com/zh-cn/library/ms229859.aspx
 
 运行后将在目录下创建新目录 Release ，并把生成的可执行文件放到这个目录下。之后您可以使用啦~
 
