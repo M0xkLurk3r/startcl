@@ -73,8 +73,8 @@ STARTCL 作为自由软件没有担保。更多版权信息，请参阅COPYING�
   
   -a x86 CPMode Release VERSION 10.0
   
-3. 将本软件复制到<GCCHOME>/bin，<GCCHOME>代表gcc工具的目录。（为什么这么做，稍后会有说明）
-4. 选择“目录”选项卡，打开“二进制”，并添加<GCCHOME>/bin。
+3. 将本软件复制到[GCCHOME]/bin，[GCCHOME]代表gcc工具的目录。（为什么这么做，稍后会有说明）
+4. 选择“目录”选项卡，打开“二进制”，并添加[GCCHOME]/bin。
 5. 选择“程序”选项卡，设置make 为gcc默认的GNU Make，Windres亦如此，其余均修改成startcl.exe。
 6. 设置完成。
 
@@ -89,11 +89,11 @@ STARTCL 是一个自由软件，您可以自由修改代码并再发布，但您
 下载完毕后应该有这么几个文件：
 
 >       Root:
-  -main.cpp           // 主程序文件。
-  -main.res           // 资源文件，编成以后会在EXE里填写本软件的version信息啦。
-  -Makefile.bat       // Makefile脚本。
-  -COPYING            // 版权声明。
-  -README.md          // 就是您现在看到的这个了咩~
+>  -main.cpp           // 主程序文件。
+>  -main.res           // 资源文件，编成以后会在EXE里填写本软件的version信息啦。
+>  -Makefile.bat       // Makefile脚本。
+>  -COPYING            // 版权声明。
+>  -README.md          // 就是您现在看到的这个了咩~
 
 解压完毕后，请使用Visual Studio命令提示运行目录下的Makefile.bat。关于如何使用Visual Studio命令提示，请参阅微软的MSDN文档：http://msdn.microsoft.com/zh-cn/library/ms229859.aspx
 
