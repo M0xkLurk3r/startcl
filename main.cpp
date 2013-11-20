@@ -414,7 +414,7 @@ int main(int argc, char* argv[]){
 	char vcExec[255]="\0";
 	char ldExec[255]="\0";
 	int counter=1;      //  初始化计数器。
-	cout<<"CL-to-Dev-C++ 连接器 v0.01beta      by 1eekai"<<endl;
+	cout<<"CL-to-Dev-C++ 连接器 v0.019beta      by 1eekai"<<endl;
 	cout<<"Copyright 2013 1eekai"<<endl;
 	cout<<"查看 ReadME.MD 来获取帮助。\n"<<endl; 
 	if (argv[1]==0){
