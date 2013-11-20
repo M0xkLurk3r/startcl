@@ -15,6 +15,7 @@
 
 #include <iostream>
 #include <cstring>
+#include <string>
 #include <process.h>
 #include <windows.h>
 #include <io.h>
@@ -104,7 +105,7 @@ bool autofindEnvAndAssign(char* keyEnvWords, char* vsVersion, char* cpuArch){
 		strcpy((char *)result1,"VSINSTALLDIR=");
 		if (isWow64()){
 			if (registeryRead("HKLM","SOFTWARE\\Wow6432Node\\Microsoft\\VisualStudio\\SxS\\VS7",vsVersion,result)==true && registeryRead("HKLM","SOFTWARE\\Wow6432Node\\Microsoft\\VisualStudio\\SxS\\VS7",vsVersion,result1)==true){
-				strcpy((char *)result,"Common7\\Tools");
+				strcat((char *)result,"Common7\\Tools");
 				putenv((char *)result1); // VS100COMNTOOLS 比 VSINSTALLDIR 多两个目录名，最后直接strcat就可以啦~
 				putenv((char *)result);
 				delete [] result;
@@ -115,7 +116,7 @@ bool autofindEnvAndAssign(char* keyEnvWords, char* vsVersion, char* cpuArch){
 				return true;
 				}else{
 					if (registeryRead("HKCU","SOFTWARE\\Wow6432Node\\Microsoft\\VisualStudio\\SxS\\VS7",vsVersion,result)==true && registeryRead("HKCU","SOFTWARE\\Wow6432Node\\Microsoft\\VisualStudio\\SxS\\VS7",vsVersion,result1)==true){
-						strcpy((char *)result,"Common7\\Tools");
+						strcat((char *)result,"Common7\\Tools");
 						putenv((char *)result1);
 						putenv((char *)result); //  同理
 						delete [] result;
