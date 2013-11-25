@@ -372,9 +372,11 @@ bool getobjfile(char* input, char* output){
 }
 		
 void showhelp(char* argv0){
-	cout<<"使用方法："<<argv0<<" [srcfile]-o[output]-a[arch][arg][arg_value]\n\n"<<endl;
+	cout<<"使用方法："<<argv0<<" [srcfile]-o[output]-a[arch]-L[libpath]-I[incpath][arg][arg_value]\n\n"<<endl;
 	cout<<"[srcfile]\t输入文件(*.c;*.cpp;*.h;*.hpp;*.obj;*.o; etc)."<<endl;
 	cout<<"[output]\t输出文件(*.exe;*.obj;*.dll; etc)."<<endl;
+	cout<<"[libpath]\t设置引用库的目录。（可选）"<<endl;
+	cout<<"[incpath]\t设置头文件的目录。（可选）"<<endl;
 	cout<<"[arch]\tCPU架构。"<<endl;
 	cout<<"\t可用值：x86,x86_amd64,amd64,x86_ia64"<<endl;
 	cout<<"其他选项及其有效值（可选）:"<<endl;
@@ -406,6 +408,10 @@ int main(int argc, char* argv[]){
 	char* tmpchar;
 	char* tmpstr;
 	char *readcpuarch;
+	char *readinc;
+	bool isUserDefinedInc=false;
+	char *readlib;
+	bool isUserDefinedLib=false;
 	char *filePoint;
 	char *finalFile=new char[65500];
 	bool inputFileisCpp=true;
@@ -480,6 +486,19 @@ counter=1;
 	}else{
 		readcpuarch=&argv[findStrInTheMatrix(argv,"-a")+1][0];
 	}
+	if (findStrInTheMatrix(argv,"-L")!=65535){
+		readlib=&argv[findStrInTheMatrix(argv,"-L")][2];
+		isUserDefinedLib=true;
+		cout<<argv[0]<<": "<<"您自行定义了LIB参数。将把您定义的参数加入运行时环境变量。"<<endl;
+	}
+	if (findStrInTheMatrix(argv,"-I")!=65535){
+		readinc=&argv[findStrInTheMatrix(argv,"-I")][2];
+		if (readinc!=0){
+			isUserDefinedInc=true;
+			cout<<argv[0]<<": "<<"您自行定义了INCLUDE参数。将把您定义的参数加入运行时环境变量。"<<endl;
+		}
+	}
+		
 		cout<<argv[0]<<": "<<"Setting runtime path for CL.exe."<<endl;
 		tmpchar=(char *)new char[65535];
 		tmpstr=(char *)new char[65535];  
@@ -563,6 +582,12 @@ counter=1;
 			strcat(tmpchar,";");
 			strcat(tmpstr,";");
 		}
+		if (isUserDefinedLib==true){
+			strcat(tmpchar,readlib);
+			strcat(tmpstr,readlib);
+			strcat(tmpchar,";");
+			strcat(tmpstr,";");
+		}
 		if (getenv("WindowsSdkDir")!=0){
 			strcat(tmpchar,getenv("WindowsSdkDir"));
 			strcat(tmpstr,getenv("WindowsSdkDir"));
@@ -593,6 +618,12 @@ counter=1;
 			strcat(tmpchar,getenv("WindowsSdkDir"));
 			strcat(tmpchar,"\\INCLUDE;");
 			}
+		}
+		if (isUserDefinedInc==true){
+			strcat(tmpchar,readinc);
+			strcat(tmpstr,readinc);
+			strcat(tmpchar,";");
+			strcat(tmpstr,";");
 		}
 		putenv(tmpchar);
 		strcpy(tmpchar,"PATH=");
