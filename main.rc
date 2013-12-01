@@ -34,8 +34,8 @@ FILETYPE VFT_APP
       VALUE "LegalCopyright", "1eekai"
       VALUE "LegalTrademarks", "1eekai"
       VALUE "OriginalFilename", "STARTCL_RELEASE.EXE"
-      VALUE "ProductName", "CL.exe-Dev-C++ Connector"
-      VALUE "ProductVersion", "0.0.1beta"
+      VALUE "ProductName", "STARTCL VS Connector"
+      VALUE "ProductVersion", "0.03beta"
     }
   }
   BLOCK "VarFileInfo"
