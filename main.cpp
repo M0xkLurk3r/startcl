@@ -18,6 +18,7 @@
 #include <string>
 #include <process.h>
 #include <windows.h>
+#include <conio.h>
 #include <io.h>
 #include <winerror.h>
 #include <tchar.h>
@@ -30,10 +31,13 @@
 
 using namespace std;
 
+bool ifStopConsole=false;
+bool ifSilentMode=false;
+
 typedef BOOL (WINAPI *LPFN_ISWOW64PROCESS) (HANDLE, PBOOL);
 LPFN_ISWOW64PROCESS fnIsWow64Process;
 
-BOOL isWow64(){
+BOOL isWow64(){ 							// ÅĞ¶Ï³ÌĞòÊÇ²»ÊÇÔËĞĞÔÚWOW64Ä£Ê½ÏÂ¡£´Ëº¯ÊıÓÃÓÚ×îºóÌí¼Ó»·¾³±äÁ¿Ê±Ò»Ğ©Ï¸½ÚÉÏµÄ²ÎÊıÉèÖÃµÄÒÀ¾İ¡£
     BOOL bIsWow64 = FALSE;
     fnIsWow64Process = (LPFN_ISWOW64PROCESS) GetProcAddress(
         GetModuleHandle(TEXT("kernel32")),"IsWow64Process");
@@ -45,6 +49,13 @@ BOOL isWow64(){
     return bIsWow64;
 }
 
+void _g_etChar(char ch){
+	char a;
+	do{
+		a=getch();
+	}while(a!=ch);
+}
+
 void clrchararray(char ch[]){           /* Çå³ıÊı×éÄÚÈİ£¬Ô­ÀíÊÇÊ¹ÓÃÑ­»·½«'\0'×Ö·ûÌîÈëÊı×éµÄÃ¿¸öÔªËØÀ´Çå¿Õ×Ö·ûÊı×é¡£   */ 
 	int a;
 	for (a=0;a<strlen(ch)+1;a++){
@@ -53,7 +64,12 @@ void clrchararray(char ch[]){           /* Çå³ıÊı×éÄÚÈİ£¬Ô­ÀíÊÇÊ¹ÓÃÑ­»·½«'\0'×Ö·
 } 
 
 void progra_exit(int exitcode){
-	cout<<"STARTCL_KERNEL: ³ÌĞòÖĞÖ¹¡£ÍË³öÂë£º"<<exitcode<<"."<<endl;
+	if (ifSilentMode==false) cout<<"STARTCL_KERNEL: ³ÌĞòÖĞÖ¹¡£ÍË³öÂë£º"<<exitcode<<"."<<endl;
+	if (ifStopConsole==true){
+		cout<<"STARTCL_KERNEL: ¼ì²éÃüÁîĞĞÆÁÄ»Êä³öĞÅÏ¢ºó£¬°´ÏÂ»Ø³µ¼üÍË³ö³ÌĞò¡£";
+		_g_etChar(13);
+	}
+	if (ifSilentMode==false) cout<<"\n"<<endl;
 	exit(exitcode);
 } 
 
@@ -76,7 +92,7 @@ bool registeryRead(char* MJKey, char* pathToReg_raw, char* keyWords_raw, unsigne
 	if (strcmp(MJKey,"HKLM")==0) MJkey=HKEY_LOCAL_MACHINE;
 	if (strcmp(MJKey,"HKCU")==0) MJkey=HKEY_CURRENT_USER;
 	if (strcmp(MJKey,"HKLM")!=0 && strcmp(MJKey,"HKCU")!=0){
-		cout<<"°²È«¾¯¸æ£º´ËÈí¼ş²»Ö§³ÖÍâ²¿º¯Êıµ÷ÓÃ¡£"<<endl;
+		if (ifSilentMode==false) cout<<"°²È«¾¯¸æ£º´ËÈí¼ş²»Ö§³ÖÍâ²¿º¯Êıµ÷ÓÃ¡£"<<endl;
 		progra_exit(10);
 		}
 	if (RegOpenKeyEx(MJkey,pathToReg,0,KEY_READ,&hkey)==ERROR_SUCCESS){
@@ -289,7 +305,7 @@ bool autofindEnvAndAssign(char* keyEnvWords, char* vsVersion, char* cpuArch){
 				}
 		}
 	}
-	cout<<keyEnvWords<<" Î´Öª´íÎó¡£"<<endl;   //    ÕâÊÇÎŞÄÎÖ®¾Ù£¬ÎªÁË·ÀÖ¹³ÌĞòdump core¡£
+	if (ifSilentMode==false) cout<<keyEnvWords<<" Î´Öª´íÎó¡£"<<endl;   //    ÕâÊÇÎŞÄÎÖ®¾Ù£¬ÎªÁË·ÀÖ¹³ÌĞòdump core¡£
 	delete [] result;
 	delete [] result1;
 	delete [] result2;
@@ -324,7 +340,7 @@ bool findEnvAndAssign(char** arg, char* keyEnvWords){   // ´Ó¶şÎ¬Êı×éÀï²éÕÒ×Ö·ûÆ
 		delete [] tmpstr; 
 		return false;
 	}else{
-		cout<<keyEnvWords<<" ÉèÖÃ³É¹¦¡£"<<endl;
+		if (ifSilentMode==false) cout<<keyEnvWords<<" ÉèÖÃ³É¹¦¡£"<<endl;
 		putenv(tmpstr);
 		delete [] tmpstr;
 		return true;
@@ -370,15 +386,26 @@ bool getobjfile(char* input, char* output){
 		output[counter]=input[counter];
 		return true;
 }
-		
+
+bool ifStrInTheMatrix(char** matrix, char* keystr){
+	int counter=0;
+	while (matrix[counter]!=0){
+		if (strcmp(matrix[counter],keystr)==0)	return true;
+		counter++;
+	}
+	return false;
+}
+
 void showhelp(char* argv0){
-	cout<<"Ê¹ÓÃ·½·¨£º"<<argv0<<" [srcfile]-o[output]-a[arch]-L[libpath]-I[incpath][arg][arg_value]\n\n"<<endl;
-	cout<<"[srcfile]\tÊäÈëÎÄ¼ş(*.c;*.cpp;*.h;*.hpp;*.obj;*.o; etc)."<<endl;
-	cout<<"[output]\tÊä³öÎÄ¼ş(*.exe;*.obj;*.dll; etc)."<<endl;
+	cout<<"Ê¹ÓÃ·½·¨£º\n"<<argv0<<" [srcfile]-o[output]-a[arch]-L[libpath]-I[incpath]--pause --silent [arg][arg_value]\n\n"<<endl;
+	cout<<"[srcfile]\tÊäÈëÎÄ¼ş(*.c;*.cpp;*.h;*.hpp;*.obj;*.o;*.rc; etc)."<<endl;
+	cout<<"[output]\tÊä³öÎÄ¼ş(*.exe;*.obj;*.dll;*.res; etc)."<<endl;
 	cout<<"[libpath]\tÉèÖÃÒıÓÃ¿âµÄÄ¿Â¼¡££¨¿ÉÑ¡£©"<<endl;
 	cout<<"[incpath]\tÉèÖÃÍ·ÎÄ¼şµÄÄ¿Â¼¡££¨¿ÉÑ¡£©"<<endl;
-	cout<<"[arch]\tCPU¼Ü¹¹¡£"<<endl;
+	cout<<"[arch]\t\tCPU¼Ü¹¹¡£"<<endl;
 	cout<<"\t¿ÉÓÃÖµ£ºx86,x86_amd64,amd64,x86_ia64"<<endl;
+	cout<<"--pause\t\t³ÌĞòÒì³£½áÊøÇ°ÔİÍ£ÖÕ¶Ë£¨¿ÉÑ¡£©"<<endl;
+	cout<<"--silent\t¾²Ä¬Ä£Ê½£¬½öÊä³ö±àÒëÆ÷µÄÏûÏ¢£¬ÆÁ±ÎStartCLµÄ×´Ì¬ÏûÏ¢¡££¨¿ÉÑ¡£©\n\t\t×¢Òâ£¬Èç¹ûÄúÖ¸¶¨ÁË¾²Ä¬Ä£Ê½£¬ÄÇÃ´--pause¹¦ÄÜ½«×Ô¶¯Ê§Ğ§¡£\n\n"<<endl;
 	cout<<"ÆäËûÑ¡Ïî¼°ÆäÓĞĞ§Öµ£¨¿ÉÑ¡£©:"<<endl;
 	cout<<"\tCPMode: [Debug][Release][another], ÉèÖÃ±àÒëÆ÷Ä£Ê½¡£"<<endl;
 	cout<<"\tVCINSTALLDIR: [PATH],ÉèÖÃÖ¸ÏòÄãµÄVisual C++°²×°µØÖ·¡£"<<endl;
@@ -418,25 +445,29 @@ int main(int argc, char* argv[]){
 	bool finalFile_Firstloop=true;
 	bool isSdkDefined=true;
 	bool onlyOutputObj=false;
-	char vcExec[255]="\0";
-	char ldExec[255]="\0";
+	bool outPutFileIsRes=false;
+	char* vcExec=new char[255];
+	char* ldExec=new char[255];
+	char* rcExec=new char[255];
 	int counter=1;      //  ³õÊ¼»¯¼ÆÊıÆ÷¡£
-	cout<<"CL-to-Dev-C++ Á¬½ÓÆ÷ v0.02beta      by 1eekai"<<endl;
-	cout<<"Copyright 2013 1eekai"<<endl;
-	cout<<"²é¿´ ReadME.MD À´»ñÈ¡°ïÖú¡£\n"<<endl; 
+	if (ifStrInTheMatrix(argv,"--silent")==true)	ifSilentMode=true;
+	if (ifSilentMode==false) cout<<"StartCL v0.03beta      by 1eekai"<<endl;
+	if (ifSilentMode==false) cout<<"Copyright 2013 1eekai"<<endl;
+	if (ifSilentMode==false) cout<<"²é¿´ ReadME.MD À´»ñÈ¡°ïÖú¡£\n"<<endl; 
 	if (argv[1]==0){
-		cout<<argv[0]<<": "<<"Äú±ØĞëÉèÖÃÒ»¸öºÏ·¨µÄC/C++Ô´Âë¡£±àÒëÖĞÖ¹¡£"<<endl;
-		progra_exit(1);    // ·ÀÖ¹³ÌĞòdump core¡£
+		if (ifSilentMode==false) cout<<argv[0]<<": "<<"Äú±ØĞëÉèÖÃÒ»¸öºÏ·¨µÄC/C++Ô´Âë¡£±àÒëÖĞÖ¹¡£"<<endl;
+		progra_exit(10);    // ·ÀÖ¹³ÌĞòdump core¡£
 	}else{
-	if (strcmp(argv[1],"--version")==0){
+	if (ifStrInTheMatrix(argv,"--pause")==true && ifStrInTheMatrix(argv,"--silent")==false)	ifStopConsole=true;
+	if (ifStrInTheMatrix(argv,"--version")==true){
 		version();
 		}
-	if (strcmp(argv[1],"--help")==0){    
+	if (ifStrInTheMatrix(argv,"--help")==true){    
 		showhelp(argv[0]);			
 	}else{
 		if (findStrInTheMatrix(argv,"-o")==65535){
-			cout<<argv[0]<<": "<<"Äú±ØĞë¶¨ÒåÒ»¸öºÏ·¨µÄÊä³öÎÄ¼şµØÖ·(ÄúÊÇ²»ÊÇÍüÁËÊ¹ÓÃ\"-o\"Ñ¡Ïî£¿:)"<<endl;
-			progra_exit(1);
+			if (ifSilentMode==false) cout<<argv[0]<<": "<<"Äú±ØĞë¶¨ÒåÒ»¸öºÏ·¨µÄÊä³öÎÄ¼şµØÖ·(ÄúÊÇ²»ÊÇÍüÁËÊ¹ÓÃ\"-o\"Ñ¡Ïî£¿:)"<<endl;
+			progra_exit(25);
 		}else{
 			outputf=&argv[findStrInTheMatrix(argv,"-o")+1][0];
 			strcpy(outputfile,"/OUT:");   // Îª Link.exe Ö¸¶¨Êä³öÄ¿Â¼£¨Æ´×Ö·û´®£©
@@ -451,9 +482,9 @@ int main(int argc, char* argv[]){
 		continue;
 	}
 	if (fileCouldbeused(argv[counter])==false){
-		cout<<argv[0]<<": "<<argv[counter]<<endl;
-		cout<<argv[0]<<": "<<"ÎÄ¼ş²»´æÔÚ»òÕßÎŞ·¨·ÃÎÊ¡£"<<endl;
-		progra_exit(1);
+		if (ifSilentMode==false) cout<<argv[0]<<": "<<argv[counter]<<endl;
+		if (ifSilentMode==false) cout<<argv[0]<<": "<<"ÎÄ¼ş²»´æÔÚ»òÕßÎŞ·¨·ÃÎÊ¡£"<<endl;
+		progra_exit(13);
 	}else{
 		filePoint=&argv[counter][findDotInThePath(argv[counter])+1];
 		if (strcmp(filePoint,"c")==0 || strcmp(filePoint,"h")==0 || strcmp(filePoint,"cpp")==0 || strcmp(filePoint,"hpp")==0 || strcmp(filePoint,"c++")==0 || strcmp(filePoint,"cxx")==0 || strcmp (filePoint,"cc")==0 || strcmp(filePoint,"cp")==0){
@@ -461,56 +492,55 @@ int main(int argc, char* argv[]){
 		}else{
 			inputFileisCpp=false;
 		}
+		if (strcmp(filePoint,"rc")==0)	outPutFileIsRes=true;
+	}
+	if (finalFile_Firstloop==true){
+		strcpy(finalFile,argv[counter]);
+	}else{
+		strcat(finalFile," ");
+		strcat(finalFile,argv[counter]);
+	}
+	}
 }
-if (finalFile_Firstloop==true){
-	strcpy(finalFile,argv[counter]);
-	cout<<finalFile<<endl;
-}else{
-	strcat(finalFile," ");
-	strcat(finalFile,argv[counter]);
-	cout<<finalFile<<endl;
-}
-}
-}
-
-
 counter=1;
 	if  (argv[findStrInTheMatrix(argv,"-o")+1]==0){
-		cout<<argv[0]<<": "<<"Äú±ØĞë¶¨ÒåÒ»¸öºÏ·¨µÄÊä³öÎÄ¼şµØÖ·¡£"<<endl;
-		progra_exit(1);
+		if (ifSilentMode==false) cout<<argv[0]<<": "<<"Äú±ØĞë¶¨ÒåÒ»¸öºÏ·¨µÄÊä³öÎÄ¼şµØÖ·¡£"<<endl;
+		progra_exit(14);
 	}
 	
 	if (findStrInTheMatrix(argv,"-a")==65535){
-		cout<<argv[0]<<": "<<"Äú±ØĞë¶¨ÒåÒ»¸öºÏ·¨ÇÒ±»Ö§³ÖµÄCPU¼Ü¹¹£¨E,g: x86,x86_amd64,amd64,x86_ia64£©¡£"<<endl;
-		progra_exit(1); 
+		if (ifSilentMode==false) cout<<argv[0]<<": "<<"Äú±ØĞë¶¨ÒåÒ»¸öºÏ·¨ÇÒ±»Ö§³ÖµÄCPU¼Ü¹¹£¨E,g: x86,x86_amd64,amd64,x86_ia64£©¡£"<<endl;
+		progra_exit(15); 
 	}else{
 		readcpuarch=&argv[findStrInTheMatrix(argv,"-a")+1][0];
 	}
 	if (findStrInTheMatrix(argv,"-L")!=65535){
 		readlib=&argv[findStrInTheMatrix(argv,"-L")][2];
 		isUserDefinedLib=true;
-		cout<<argv[0]<<": "<<"Äú×ÔĞĞ¶¨ÒåÁËLIB²ÎÊı¡£½«°ÑÄú¶¨ÒåµÄ²ÎÊı¼ÓÈëÔËĞĞÊ±»·¾³±äÁ¿¡£"<<endl;
+		if (ifSilentMode==false) cout<<argv[0]<<": "<<"Äú×ÔĞĞ¶¨ÒåÁËLIB²ÎÊı¡£½«°ÑÄú¶¨ÒåµÄ²ÎÊı¼ÓÈëÔËĞĞÊ±»·¾³±äÁ¿¡£"<<endl;
 	}
 	if (findStrInTheMatrix(argv,"-I")!=65535){
 		readinc=&argv[findStrInTheMatrix(argv,"-I")][2];
 		if (readinc!=0){
 			isUserDefinedInc=true;
-			cout<<argv[0]<<": "<<"Äú×ÔĞĞ¶¨ÒåÁËINCLUDE²ÎÊı¡£½«°ÑÄú¶¨ÒåµÄ²ÎÊı¼ÓÈëÔËĞĞÊ±»·¾³±äÁ¿¡£"<<endl;
+			if (ifSilentMode==false) cout<<argv[0]<<": "<<"Äú×ÔĞĞ¶¨ÒåÁËINCLUDE²ÎÊı¡£½«°ÑÄú¶¨ÒåµÄ²ÎÊı¼ÓÈëÔËĞĞÊ±»·¾³±äÁ¿¡£"<<endl;
 		}
 	}
 		
-		cout<<argv[0]<<": "<<"Setting runtime path for CL.exe."<<endl;
+		if (ifSilentMode==false) cout<<argv[0]<<": "<<"Setting runtime path for CL.exe."<<endl;
 		tmpchar=(char *)new char[65535];
 		tmpstr=(char *)new char[65535];  
 		if (findEnvAndAssign(argv,"VERSION")==false){
-			cout<<argv[0]<<": VERSIONÏî±ØĞë±»¶¨Òå¡£È±Ê¡Ê¹ÓÃ10.0¡£"<<endl;
+			if (ifSilentMode==false) cout<<argv[0]<<": VERSIONÏî±ØĞë±»¶¨Òå¡£È±Ê¡Ê¹ÓÃ10.0¡£"<<endl;
 			putenv("VERSION=10.0");
 			}
 		if (findEnvAndAssign(argv,"VCINSTALLDIR")==false) 
 			if (autofindEnvAndAssign("VCINSTALLDIR",getenv("VERSION"),readcpuarch)==false)
-				cout<<argv[0]<<": VCINSTALLDIR Î´¶¨Òå»òÕß×Ô¶¯ÅäÖÃ´íÎó£¡\n"<<argv[0]<<": ±àÒë¿ÉÄÜÎŞ·¨Õı³£Íê³É¡£"<<endl;
+				if (ifSilentMode==false) cout<<argv[0]<<": VCINSTALLDIR Î´¶¨Òå»òÕß×Ô¶¯ÅäÖÃ´íÎó£¡\n"<<argv[0]<<": ±àÒë¿ÉÄÜÎŞ·¨Õı³£Íê³É¡£"<<endl;
 				else{
 					clrchararray(vcExec);
+					clrchararray(ldExec);
+					clrchararray(rcExec);
 					strcpy(vcExec,getenv("VCINSTALLDIR"));
 					if (strcmp(readcpuarch,"x86")==0) strcat(vcExec,"bin\\cl.exe");
 					if (strcmp(readcpuarch,"amd64")==0) strcat(vcExec,"bin\\amd64\\cl.exe");
@@ -521,27 +551,32 @@ counter=1;
 					if (strcmp(readcpuarch,"amd64")==0) strcat(ldExec,"bin\\amd64\\link.exe");
 					if (strcmp(readcpuarch,"x86_amd64")==0) strcat(ldExec,"bin\\x86_amd64\\link.exe");
 					if (strcmp(readcpuarch,"x86_ia64")==0) strcat(ldExec,"bin\\x86_ia64\\link.exe");
+					strcpy(rcExec,getenv("VCINSTALLDIR"));
+					if (strcmp(readcpuarch,"x86")==0) strcat(rcExec,"bin\\rc.exe");
+					if (strcmp(readcpuarch,"amd64")==0) strcat(rcExec,"bin\\amd64\\rc.exe");
+					if (strcmp(readcpuarch,"x86_amd64")==0) strcat(rcExec,"bin\\x86_amd64\\rc.exe");
+					if (strcmp(readcpuarch,"x86_ia64")==0) strcat(rcExec,"bin\\x86_ia64\\rc.exe");
 				}
 		if (findEnvAndAssign(argv,"VSINSTALLDIR")==false) 
 			if (autofindEnvAndAssign("VSINSTALLDIR",getenv("VERSION"),readcpuarch)==false)
-				cout<<argv[0]<<": VSINSTALLDIR Î´¶¨Òå»òÕß×Ô¶¯ÅäÖÃ´íÎó£¡\n"<<argv[0]<<": ±àÒë¿ÉÄÜÎŞ·¨Õı³£Íê³É¡£"<<endl;
+				if (ifSilentMode==false) cout<<argv[0]<<": VSINSTALLDIR Î´¶¨Òå»òÕß×Ô¶¯ÅäÖÃ´íÎó£¡\n"<<argv[0]<<": ±àÒë¿ÉÄÜÎŞ·¨Õı³£Íê³É¡£"<<endl;
 		if (findEnvAndAssign(argv,"VS100COMNTOOLS")==false) 
 			if (autofindEnvAndAssign("VS100COMNTOOLS",getenv("VERSION"),readcpuarch)==false)
-				cout<<argv[0]<<": VS100COMNTOOLS Î´¶¨Òå»òÕß×Ô¶¯ÅäÖÃ´íÎó£¡\n"<<argv[0]<<": ±àÒë¿ÉÄÜÎŞ·¨Õı³£Íê³É¡£"<<endl;
+				if (ifSilentMode==false) cout<<argv[0]<<": VS100COMNTOOLS Î´¶¨Òå»òÕß×Ô¶¯ÅäÖÃ´íÎó£¡\n"<<argv[0]<<": ±àÒë¿ÉÄÜÎŞ·¨Õı³£Íê³É¡£"<<endl;
 		if (findEnvAndAssign(argv,"WindowsSdkDir")==false) 
 			if (autofindEnvAndAssign("WindowsSdkDir",getenv("VERSION"),readcpuarch)==false){
-				cout<<argv[0]<<": WindowsSdkDir Î´¶¨Òå»òÕß×Ô¶¯ÅäÖÃ´íÎó£¡\n"<<argv[0]<<": ±àÒë¿ÉÄÜÎŞ·¨Õı³£Íê³É¡£"<<endl;
+				if (ifSilentMode==false) cout<<argv[0]<<": WindowsSdkDir Î´¶¨Òå»òÕß×Ô¶¯ÅäÖÃ´íÎó£¡\n"<<argv[0]<<": ±àÒë¿ÉÄÜÎŞ·¨Õı³£Íê³É¡£"<<endl;
 			isSdkDefined=false;
 		}else{
 			isSdkDefined=true;
 		}
 		if (findEnvAndAssign(argv,"FrameworkDir")==false) 
 			if (autofindEnvAndAssign("FrameworkDir",getenv("VERSION"),readcpuarch)==false)
-				cout<<argv[0]<<": Î´¶¨Òå»òÕß×Ô¶¯ÅäÖÃ´íÎó£¡\n"<<argv[0]<<": ±àÒë¿ÉÄÜÎŞ·¨Õı³£Íê³É¡£"<<endl;
+				if (ifSilentMode==false) cout<<argv[0]<<": Î´¶¨Òå»òÕß×Ô¶¯ÅäÖÃ´íÎó£¡\n"<<argv[0]<<": ±àÒë¿ÉÄÜÎŞ·¨Õı³£Íê³É¡£"<<endl;
 		if (findEnvAndAssign(argv,"CPMode")==false) {
-		cout<<argv[0]<<": CPMode Î´¶¨Òå»òÕß×Ô¶¯ÅäÖÃ´íÎó£¡±àÒëÖĞÖ¹¡£"<<endl;
+		if (ifSilentMode==false) cout<<argv[0]<<": CPMode Î´¶¨Òå»òÕß×Ô¶¯ÅäÖÃ´íÎó£¡±àÒëÖĞÖ¹¡£"<<endl;
 		clrchararray(tmpchar);
-		progra_exit(1);
+		progra_exit(45);
 		}else{
 			if (strcmp(getenv("CPMode"),"Debug")==0){
 				if (onlyOutputObj==true) putenv("CPMode=/c");
@@ -674,25 +709,13 @@ counter=1;
 		putenv(tmpchar);
 		delete [] tmpstr;
 		delete [] tmpchar;
-		cout<<finalFile<<endl;
-		if (outputfile!=0) cout<<outputfile<<endl;
-		if (outputfile_cl!=0) cout<<outputfile_cl<<endl;
-		if (inputFileisCpp==true){
-			cout<<argv[0]<<": ÔËĞĞÊ±»·¾³ÉèÖÃÍê³É£¬ÏÖÔÚ½«µ÷ÓÃCL.exeÀ´±àÒëÄúµÄ´úÂë¡£"<<endl;
-			cout<<argv[0]<<": CL.exe ÃüÁîĞĞÊä³ö£º\n\n"<<endl;
-		}else{
-			cout<<argv[0]<<": ÔËĞĞÊ±»·¾³ÉèÖÃÍê³É£¬ÏÖÔÚ½«µ÷ÓÃLink.exeÀ´Á¬½ÓÄúµÄ¶ş½øÖÆÎÄ¼ş¡£"<<endl;
-			cout<<argv[0]<<": LINK.exe ÃüÁîĞĞÊä³ö£º\n\n"<<endl;
-		}
-		if (fileCouldbeused(vcExec)==false){    //   ·ÀÖ¹³ÌĞò dump core¡£
-			cout<<argv[0]<<": "<<vcExec<<endl;
-			cout<<argv[0]<<": "<<"ÎÄ¼ş²»´æÔÚ»òÎŞ·¨·ÃÎÊ£¡"<<endl;
-			progra_exit(1);
-		}else{
-			if (inputFileisCpp==true){
+		if (outputfile!=0) if (ifSilentMode==false) cout<<outputfile<<endl;
+		if (outputfile_cl!=0) if (ifSilentMode==false) cout<<outputfile_cl<<endl;
+		if (inputFileisCpp==true && outPutFileIsRes==false){
+			if (ifSilentMode==false) cout<<argv[0]<<": ÔËĞĞÊ±»·¾³ÉèÖÃÍê³É£¬ÏÖÔÚ½«µ÷ÓÃCL.exeÀ´±àÒëÄúµÄ´úÂë¡£"<<endl;
+			if (ifSilentMode==false) cout<<argv[0]<<": CL.exe ÃüÁîĞĞÊä³ö£º\n\n"<<endl;
 			execl(vcExec,"cl.exe",getenv("CPMode"),finalFile,outputfile_cl,NULL); 			//    Ö´ĞĞcl.exe
 			if (onlyOutputObj==true){
-				cout<<purefile<<endl;
 				getobjfile(finalFile,purefile);
 				strcpy(objfile,purefile);
 				strcat(objfile,".obj");
@@ -701,11 +724,26 @@ counter=1;
 				delete [] purefile;
 			}
 		}else{
+			if (ifSilentMode==false) cout<<argv[0]<<": ÔËĞĞÊ±»·¾³ÉèÖÃÍê³É£¬ÏÖÔÚ½«µ÷ÓÃLink.exeÀ´Á¬½ÓÄúµÄ¶ş½øÖÆÎÄ¼ş¡£"<<endl;
+			if (ifSilentMode==false) cout<<argv[0]<<": LINK.exe ÃüÁîĞĞÊä³ö£º\n\n"<<endl;
 			execl(ldExec,"link.exe",finalFile,outputfile,NULL); //    Ö´ĞĞ link.exe
 		}
+		if (outPutFileIsRes==true){
+			if (ifSilentMode==false) cout<<argv[0]<<": ÔËĞĞÊ±»·¾³ÉèÖÃÍê³É£¬ÏÖÔÚ½«µ÷ÓÃRC.exeÀ´±àÒëÄúµÄ´úÂë¡£"<<endl;
+			if (ifSilentMode==false) cout<<argv[0]<<": RC.exe ÃüÁîĞĞÊä³ö£º\n\n"<<endl;
+			execl(rcExec,"rc.exe","/fo",outputf,finalFile,NULL);
+		}
+		if ((inputFileisCpp==true && outPutFileIsRes==false && fileCouldbeused(vcExec)==false) || (inputFileisCpp==false && outPutFileIsRes==false &&fileCouldbeused(ldExec)==false) || (inputFileisCpp==false && outPutFileIsRes==true && fileCouldbeused(rcExec)==false)) {    //   ·ÀÖ¹³ÌĞò dump core¡£
+			if (ifSilentMode==false) cout<<argv[0]<<": "<<vcExec<<endl;
+			if (ifSilentMode==false) cout<<argv[0]<<": "<<"ÎÄ¼ş²»´æÔÚ»òÎŞ·¨·ÃÎÊ£¡"<<endl;
+			progra_exit(13);
+		}else{
 		}
 		delete [] outputfile;
 		delete [] outputfile_cl;
 		delete [] finalFile;
+		delete [] vcExec;
+		delete [] ldExec;
+		delete [] rcExec;
 		return 0;
 }
