@@ -67,7 +67,7 @@ void progra_exit(int exitcode){
 	if (ifSilentMode==false) cout<<"STARTCL_KERNEL: 程序中止。退出码："<<exitcode<<"."<<endl;
 	if (ifStopConsole==true){
 		cout<<"STARTCL_KERNEL: 检查命令行屏幕输出信息后，按下回车键退出程序。";
-		_g_etChar(13);
+		_g_etChar(13);  // 如果在命令行下使用STARTCL，这个功能就很实用了。
 	}
 	if (ifSilentMode==false) cout<<"\n"<<endl;
 	exit(exitcode);
@@ -396,6 +396,12 @@ bool ifStrInTheMatrix(char** matrix, char* keystr){
 	return false;
 }
 
+void fileNotExist(char* filename){
+	if (ifSilentMode==false) cout<<filename<<endl;
+	if (ifSilentMode==false) cout<<"文件不存在或无法访问！程序被迫中止。"<<endl;
+	progra_exit(13);
+}
+
 void showhelp(char* argv0){
 	cout<<"使用方法：\n"<<argv0<<" [srcfile]-o[output]-a[arch]-L[libpath]-I[incpath]--pause --silent [arg][arg_value]\n\n"<<endl;
 	cout<<"[srcfile]\t输入文件(*.c;*.cpp;*.h;*.hpp;*.obj;*.o;*.rc; etc)."<<endl;
@@ -482,9 +488,7 @@ int main(int argc, char* argv[]){
 		continue;
 	}
 	if (fileCouldbeused(argv[counter])==false){
-		if (ifSilentMode==false) cout<<argv[0]<<": "<<argv[counter]<<endl;
-		if (ifSilentMode==false) cout<<argv[0]<<": "<<"文件不存在或者无法访问。"<<endl;
-		progra_exit(13);
+		fileNotExist(argv[counter]);
 	}else{
 		filePoint=&argv[counter][findDotInThePath(argv[counter])+1];
 		if (strcmp(filePoint,"c")==0 || strcmp(filePoint,"h")==0 || strcmp(filePoint,"cpp")==0 || strcmp(filePoint,"hpp")==0 || strcmp(filePoint,"c++")==0 || strcmp(filePoint,"cxx")==0 || strcmp (filePoint,"cc")==0 || strcmp(filePoint,"cp")==0){
@@ -534,29 +538,29 @@ counter=1;
 			if (ifSilentMode==false) cout<<argv[0]<<": VERSION项必须被定义。缺省使用10.0。"<<endl;
 			putenv("VERSION=10.0");
 			}
-		if (findEnvAndAssign(argv,"VCINSTALLDIR")==false) 
-			if (autofindEnvAndAssign("VCINSTALLDIR",getenv("VERSION"),readcpuarch)==false)
-				if (ifSilentMode==false) cout<<argv[0]<<": VCINSTALLDIR 未定义或者自动配置错误！\n"<<argv[0]<<": 编译可能无法正常完成。"<<endl;
-				else{
-					clrchararray(vcExec);
-					clrchararray(ldExec);
-					clrchararray(rcExec);
-					strcpy(vcExec,getenv("VCINSTALLDIR"));
-					if (strcmp(readcpuarch,"x86")==0) strcat(vcExec,"bin\\cl.exe");
-					if (strcmp(readcpuarch,"amd64")==0) strcat(vcExec,"bin\\amd64\\cl.exe");
-					if (strcmp(readcpuarch,"x86_amd64")==0) strcat(vcExec,"bin\\x86_amd64\\cl.exe");
-					if (strcmp(readcpuarch,"x86_ia64")==0) strcat(vcExec,"bin\\x86_ia64\\cl.exe");
-					strcpy(ldExec,getenv("VCINSTALLDIR"));
-					if (strcmp(readcpuarch,"x86")==0) strcat(ldExec,"bin\\link.exe");
-					if (strcmp(readcpuarch,"amd64")==0) strcat(ldExec,"bin\\amd64\\link.exe");
-					if (strcmp(readcpuarch,"x86_amd64")==0) strcat(ldExec,"bin\\x86_amd64\\link.exe");
-					if (strcmp(readcpuarch,"x86_ia64")==0) strcat(ldExec,"bin\\x86_ia64\\link.exe");
-					strcpy(rcExec,getenv("VCINSTALLDIR"));
-					if (strcmp(readcpuarch,"x86")==0) strcat(rcExec,"bin\\rc.exe");
-					if (strcmp(readcpuarch,"amd64")==0) strcat(rcExec,"bin\\amd64\\rc.exe");
-					if (strcmp(readcpuarch,"x86_amd64")==0) strcat(rcExec,"bin\\x86_amd64\\rc.exe");
-					if (strcmp(readcpuarch,"x86_ia64")==0) strcat(rcExec,"bin\\x86_ia64\\rc.exe");
-				}
+		clrchararray(vcExec);
+		clrchararray(ldExec);
+		clrchararray(rcExec);
+		if ((autofindEnvAndAssign("VCINSTALLDIR",getenv("VERSION"),readcpuarch)==false) && (findEnvAndAssign(argv,"VCINSTALLDIR")==false)){
+			if (ifSilentMode==false) cout<<argv[0]<<": VCINSTALLDIR 未定义或者自动配置错误！\n"<<argv[0]<<": 编译可能无法正常完成。"<<endl;
+		}else{
+			strcpy(vcExec,getenv("VCINSTALLDIR"));
+			if (strcmp(readcpuarch,"x86")==0) strcat(vcExec,"bin\\cl.exe");
+			if (strcmp(readcpuarch,"amd64")==0) strcat(vcExec,"bin\\amd64\\cl.exe");
+			if (strcmp(readcpuarch,"x86_amd64")==0) strcat(vcExec,"bin\\x86_amd64\\cl.exe");
+			if (strcmp(readcpuarch,"x86_ia64")==0) strcat(vcExec,"bin\\x86_ia64\\cl.exe");
+			strcpy(ldExec,getenv("VCINSTALLDIR"));
+			if (strcmp(readcpuarch,"x86")==0) strcat(ldExec,"bin\\link.exe");
+			if (strcmp(readcpuarch,"amd64")==0) strcat(ldExec,"bin\\amd64\\link.exe");
+			if (strcmp(readcpuarch,"x86_amd64")==0) strcat(ldExec,"bin\\x86_amd64\\link.exe");
+			if (strcmp(readcpuarch,"x86_ia64")==0) strcat(ldExec,"bin\\x86_ia64\\link.exe");
+			strcpy(rcExec,getenv("VCINSTALLDIR"));
+			if (strcmp(readcpuarch,"x86")==0) strcat(rcExec,"bin\\rc.exe");
+			if (strcmp(readcpuarch,"amd64")==0) strcat(rcExec,"bin\\amd64\\rc.exe");
+			if (strcmp(readcpuarch,"x86_amd64")==0) strcat(rcExec,"bin\\x86_amd64\\rc.exe");
+			if (strcmp(readcpuarch,"x86_ia64")==0) strcat(rcExec,"bin\\x86_ia64\\rc.exe");
+		}
+
 		if (findEnvAndAssign(argv,"VSINSTALLDIR")==false) 
 			if (autofindEnvAndAssign("VSINSTALLDIR",getenv("VERSION"),readcpuarch)==false)
 				if (ifSilentMode==false) cout<<argv[0]<<": VSINSTALLDIR 未定义或者自动配置错误！\n"<<argv[0]<<": 编译可能无法正常完成。"<<endl;
@@ -709,11 +713,10 @@ counter=1;
 		putenv(tmpchar);
 		delete [] tmpstr;
 		delete [] tmpchar;
-		if (outputfile!=0) if (ifSilentMode==false) cout<<outputfile<<endl;
-		if (outputfile_cl!=0) if (ifSilentMode==false) cout<<outputfile_cl<<endl;
 		if (inputFileisCpp==true && outPutFileIsRes==false){
 			if (ifSilentMode==false) cout<<argv[0]<<": 运行时环境设置完成，现在将调用CL.exe来编译您的代码。"<<endl;
 			if (ifSilentMode==false) cout<<argv[0]<<": CL.exe 命令行输出：\n\n"<<endl;
+			if (fileCouldbeused(vcExec)==false) fileNotExist(vcExec);
 			execl(vcExec,"cl.exe",getenv("CPMode"),finalFile,outputfile_cl,NULL); 			//    执行cl.exe
 			if (onlyOutputObj==true){
 				getobjfile(finalFile,purefile);
@@ -723,27 +726,24 @@ counter=1;
 				delete [] objfile;
 				delete [] purefile;
 			}
-		}else{
+		}
+		if (inputFileisCpp==false && outPutFileIsRes==false){
 			if (ifSilentMode==false) cout<<argv[0]<<": 运行时环境设置完成，现在将调用Link.exe来连接您的二进制文件。"<<endl;
 			if (ifSilentMode==false) cout<<argv[0]<<": LINK.exe 命令行输出：\n\n"<<endl;
+			if (fileCouldbeused(ldExec)==false) fileNotExist(ldExec);
 			execl(ldExec,"link.exe",finalFile,outputfile,NULL); //    执行 link.exe
 		}
 		if (outPutFileIsRes==true){
 			if (ifSilentMode==false) cout<<argv[0]<<": 运行时环境设置完成，现在将调用RC.exe来编译您的代码。"<<endl;
 			if (ifSilentMode==false) cout<<argv[0]<<": RC.exe 命令行输出：\n\n"<<endl;
+			if (fileCouldbeused(rcExec)==false) fileNotExist(rcExec);
 			execl(rcExec,"rc.exe","/fo",outputf,finalFile,NULL);
-		}
-		if ((inputFileisCpp==true && outPutFileIsRes==false && fileCouldbeused(vcExec)==false) || (inputFileisCpp==false && outPutFileIsRes==false &&fileCouldbeused(ldExec)==false) || (inputFileisCpp==false && outPutFileIsRes==true && fileCouldbeused(rcExec)==false)) {    //   防止程序 dump core。
-			if (ifSilentMode==false) cout<<argv[0]<<": "<<vcExec<<endl;
-			if (ifSilentMode==false) cout<<argv[0]<<": "<<"文件不存在或无法访问！"<<endl;
-			progra_exit(13);
-		}else{
 		}
 		delete [] outputfile;
 		delete [] outputfile_cl;
 		delete [] finalFile;
 		delete [] vcExec;
-		delete [] ldExec;
 		delete [] rcExec;
+		delete [] ldExec;
 		return 0;
 }
